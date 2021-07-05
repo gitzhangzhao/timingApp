@@ -16,113 +16,128 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
+/**********************************************************************
+ *                            Header Files                            *
+ **********************************************************************/
+
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
-#define FATAL do { fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", \
-    __LINE__, __FILE__, errno, strerror(errno)); exit(1); } while(0)
+/**********************************************************************
+ *                          Macro Definitions                         *
+ **********************************************************************/
+
+#define FATAL                                                              \
+    do {                                                                   \
+        fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", __LINE__, \
+                __FILE__, errno, strerror(errno));                         \
+        exit(1);                                                           \
+    } while (0)
 
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
 
-#define    control                0x00 
-#define    eventramaddr           0x00
-#define    eventramdata           0x00
-#define    outputpulseenables     0x00
-#define    outputlevelenables     0x00
-#define    triggereventenables    0x00
-#define    eventcounterlo         0x00
-#define    eventcounterhi         0x00
-#define    timestamplo            0x00
-#define    timestamphi            0x00
-#define    eventfifo              0x00  /* lsb = event #, msb  lsb of time stamp counter */
-#define    EventTimeHi            0x00  /* bits 23-8 of the time stamp counter */
-#define    DelayPulseEnables      0x00
-#define    DelayPulseSelect       0x00  /* OTP pulses have delays and widths. See HW technical reference */
-#define    PulseDelay             0x00
-#define    PulseWidth             0x00
-#define    IrqVector              0x00
-#define    IrqEnables             0x00
+/**********************************************************************
+ *                        Hardware Definitions                        *
+ **********************************************************************/
+/*         Register         Address Offset  No.    Description*/
+#define    Control                0x00    /*00*/
+#define    Eventramaddr           0x04    /*01*/
+#define    Eventramdata           0x08    /*02*/
+#define    Outputpulseenables     0x0c    /*03*/
+#define    Outputlevelenables     0x10    /*04*/
+#define    Triggereventenables    0x14    /*05*/
+#define    Eventcounterlo         0x18    /*06*/
+#define    Eventcounterhi         0x1c    /*07*/
+#define    Timestamplo            0x20    /*08*/
+#define    Timestamphi            0x24    /*09*/
+#define    Eventfifo              0x28    /*10     lsb = event #, msb  lsb of time stamp counter */
+#define    EventTimeHi            0x2c    /*11     bits 23-8 of the time stamp counter */
+#define    DelayPulseEnables      0x30    /*12*/
+#define    DelayPulseSelect       0x34    /*13     OTP pulses have delays and widths. See HW technical reference */
+#define    PulseDelay             0x38    /*14*/
+#define    PulseWidth             0x3c    /*15*/
+#define    IrqVector              0x40    /*16*/
+#define    IrqEnables             0x44    /*17*/
 
-/*---------------------
-   Extended registers 
- --------------------*/
-#define    DBusEnables            0x00/* Distributed bus enable register */
-#define    DBusData               0x00/* Distributed bus data register (read only) */
-#define    DelayPrescaler         0x00/* Programmable delay pulse clock prescaler */
-#define    EventCounterClock      0x00/* Event counter clock prescaler */
-#define    Resvd1                 0x00/* 0x2c */
-#define    FPGAVersion            0x00/* FPGA Firmware version number */
-#define    Resvd3                 0x00/* 0x30 */
-#define    Resvd4                 0x00/* 0x32 */
-#define    Resvd5                 0x00/* 0x34 */
-#define    Resvd6                 0x00/* 0x36 */
-#define    Resvd7                 0x00/* 0x38 */
-#define    Resvd8                 0x00/* 0x3a */
-#define    Resvd9                 0x00/* 0x3c */
-#define    Resvd10                0x00/* 0x3e */
-#define    FP0Map /* 0x040, Front panel output mapping register */
-#define    FP1Map /* 0x042, Front panel output mapping register */
-#define    FP2Map /* 0x044, Front panel output mapping register */
-#define    FP3Map /* 0x046, Front panel output mapping register */
-#define    FP4Map /* 0x048, Front panel output mapping register */
-#define    FP5Map /* 0x04a, Front panel output mapping register */
-#define    FP6Map /* 0x04c, Front panel output mapping register */
-#define    uSecDivider /*Resvd11 0x4e*/
-#define    ExtEventCode  /* 0x50 */
-#define    ClockControl 
-#define    SecondsSR 
-#define    TSSec 
-#define    Resvd12 
-#define    EvFIFOSec 
-#define    EvFIFOEvCnt 
-#define    OutputPol 
-#define    ExtDelay /*extended/32-bit delay register*/
-#define    ExtWidth /*extended/32-bit width register*/
-#define    Presc0   /* 0x074, Front panel clock #0 presaler */
-#define    Presc1	  /* 0x076, Front panel clock #1 presaler */
-#define    Presc2   /* 0x078, Front panel clock #2 presaler */
-/* gt	 	Resvd13*/ /* 0x7a*/
-#define    DataBufCtrl /* 0x7a*/ /*leige */
-#define    	RFpattern /* 0x7c*/ /*leige set RFpattern */
-#define    FracDiv /* 0x80 leige */
+/************************
+*  Extended registers  *
+************************/
+
+#define    DBusEnables            0x48    /*18     Distributed bus enable register */
+#define    DBusData               0x4c    /*19     Distributed bus data register (read only) */
+#define    DelayPrescaler         0x50    /*20     Programmable delay pulse clock prescaler */
+#define    EventCounterClock      0x54    /*21     Event counter clock prescaler */
+#define    Resvd1                 0x58    /*22*/
+#define    FPGAVersion            0x5c    /*23     FPGA Firmware version number */
+#define    Resvd3                 0x60    /*24*/
+#define    Resvd4                 0x64    /*25*/
+#define    Resvd5                 0x68    /*26*/
+#define    Resvd6                 0x6c    /*27*/
+#define    Resvd7                 0x70    /*28*/
+#define    Resvd8                 0x74    /*29*/
+#define    Resvd9                 0x78    /*30*/
+#define    Resvd10                0x7c    /*31*/
+#define    FP0Map                 0x80    /*32     Front panel output mapping register */
+#define    FP1Map                 0x84    /*33     Front panel output mapping register */
+#define    FP2Map                 0x88    /*34     Front panel output mapping register */
+#define    FP3Map                 0x8c    /*35     Front panel output mapping register */
+#define    FP4Map                 0x90    /*36     Front panel output mapping register */
+#define    FP5Map                 0x94    /*37     Front panel output mapping register */
+#define    FP6Map                 0x98    /*38     Front panel output mapping register */
+#define    uSecDivider            0x9c    /*39     Resvd11*/
+#define    ExtEventCode           0xa0    /*40*/
+#define    ClockControl           0xa4
+#define    SecondsSR              0xa8
+#define    TSSec                  0xac
+#define    Resvd12                0xb0
+#define    EvFIFOSec              0xb4
+#define    EvFIFOEvCnt            0xb8
+#define    OutputPol              0xbc
+#define    ExtDelay               0xc0/* extended/32-bit delay register*/
+#define    ExtWidth               0xc4/* extended/32-bit width register*/
+#define    Presc0                 0xc8/* 0x074, Front panel clock #0 presaler */
+#define    Presc1	              0xcc/* 0x076, Front panel clock #1 presaler */
+#define    Presc2                 0xd0/* 0x078, Front panel clock #2 presaler */
+/*define   Resvd13                0x7a*/
+#define    DataBufCtrl            0xd4/* 0x7a*/ /*leige */
+#define    RFpattern              0xd8/* 0x7c*/ /*leige set RFpattern */
+#define    FracDiv                0xdc/* 0x80 leige */
   /* These registers are only of special interest and
      left outside EPICS support for the time being. TK, 25-JUL-05. */
-#define    RfDelay 
-#define    RxDelay 
-#define    Resvd14 /* 0x8c leige */
-#define    FBRFFrac /* 0x90 leige */
-#define    FbRxFrac 
-#define    RFDelyInit 
-#define    RxDelyInit /* 09C */
-#define    CML4Pat00 /* 0A0 */
-#define    CML4Pat01 /* 0A4 */
-#define    CML4Pat10 /* 0A8 */
-#define    CML4Pat11 /* 0AC */
-#define    CML4Ena /* 0B0 */
-#define    CML4EnaResv_1 /* 0B4 */
-#define    CML4EnaResv_2 /* 0B8 */
-#define    CML4EnaResv_3 /* 0BC */
-#define    CML5Pat00 /* 0C0 */
-#define    CML5Pat01 /* 0C4 */
-#define    CML5Pat10 /* 0C8 */
-#define    CML5Pat11 /* 0CC */
-#define    CML5Ena /* 0D0 */
-#define    CML5EnaResv_1 /* 0B4 */
-#define    CML5EnaResv_2 /* 0B8 */
-#define    CML5EnaResv_3 /* 0BC */
-#define    CML6Pat00 /* 0E0 */
-#define    CML6Pat01 /* 0E4 */
-#define    CML6Pat10 /* 0E8 */
-#define    CML6Pat11 /* 0EC */
-#define    CML6Ena /* 0F0 */
-#define    CML6EnaResv_1 /* 0B4 */
-#define    CML6EnaResv_2 /* 0B8 */
-#define    CML6EnaResv_3 /* 0BC */
-
-
+#define    RfDelay                0x00
+#define    RxDelay                0x00
+#define    Resvd14                0x00/* 0x8c leige */
+#define    FBRFFrac               0x00/* 0x90 leige */
+#define    FbRxFrac               0x00
+#define    RFDelyInit             0x00
+#define    RxDelyInit             0x00/* 09C */
+#define    CML4Pat00              0x00/* 0A0 */
+#define    CML4Pat01              0x00/* 0A4 */
+#define    CML4Pat10              0x00/* 0A8 */
+#define    CML4Pat11              0x00/* 0AC */
+#define    CML4Ena                0x00/* 0B0 */
+#define    CML4EnaResv_1          0x00/* 0B4 */
+#define    CML4EnaResv_2          0x00/* 0B8 */
+#define    CML4EnaResv_3          0x00/* 0BC */
+#define    CML5Pat00              0x00/* 0C0 */
+#define    CML5Pat01              0x00/* 0C4 */
+#define    CML5Pat10              0x00/* 0C8 */
+#define    CML5Pat11              0x00/* 0CC */
+#define    CML5Ena                0x00/* 0D0 */
+#define    CML5EnaResv_1          0x00/* 0B4 */
+#define    CML5EnaResv_2          0x00/* 0B8 */
+#define    CML5EnaResv_3          0x00/* 0BC */
+#define    CML6Pat00              0x00/* 0E0 */
+#define    CML6Pat01              0x00/* 0E4 */
+#define    CML6Pat10              0x00/* 0E8 */
+#define    CML6Pat11              0x00/* 0EC */
+#define    CML6Ena                0x00/* 0F0 */
+#define    CML6EnaResv_1          0x00/* 0B4 */
+#define    CML6EnaResv_2          0x00/* 0B8 */
+#define    CML6EnaResv_3          0x00/* 0BC */
