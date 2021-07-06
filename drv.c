@@ -32,6 +32,10 @@
  *                          Macro Definitions                         *
  **********************************************************************/
 
+#define PAGE_SIZE 4096UL
+#define PAGE_MASK (PAGE_SIZE - 1)
+#define BASE_ADDR
+
 #define FATAL                                                              \
     do {                                                                   \
         fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", __LINE__, \
@@ -39,10 +43,10 @@
         exit(1);                                                           \
     } while (0)
 
-#define MAP_SIZE 4096UL
-#define MAP_MASK (MAP_SIZE - 1)
-#define BASE_ADDR
-#define MAP_ADDR(x) { x + BASE_ADDR }
+#define MAP_ADDR(x) (x + BASE_ADDR)
+
+#define PAGEADDR2VIRTADDR(map_addr, page_addr) \
+    page_addr + ((map_addr)&PAGE_MASK)
 
 /**********************************************************************
  *                        Hardware Definitions                        *
@@ -150,23 +154,84 @@
 /* #define    CML6EnaResv_3          0x00/1* 0BC *1/ */
 
 /**********************************************************************
-*                             Functions                              *
-**********************************************************************/
+ *                             Functions                              *
+ **********************************************************************/
 
-/*****************************
- *  phyaddr_mapto_viraddr()  *
- *****************************/
+/**********************************************************************
+ *                     phyaddr_mapto_pageaddr()                        *
+ ***********************************************************************
+ *   Map physical address to virtual address, return the first address *
+ *   of the mapped page.                                               *
+ **********************************************************************/
 
-off_t phyaddr_mapto_viraddr(off_t map_addr) {
+void phyaddr_mapto_pageaddr(off_t map_addr, void **page_addr) {
     int fd;
-    void *page_addr, *vir_addr;
+    void *addr;
 
     if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
     printf("/dev/mem opened.\n");
 
     /* Map one page */
-    page_addr = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
-                     map_addr & ~MAP_MASK);
-    if (page_addr == (void *)-1) FATAL;
-    printf("Memory mapped at address %p.\n", page_addr);
+    addr = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                map_addr & ~PAGE_MASK);
+    if (addr == (void *)-1) FATAL;
+
+    printf("One page mapped at address %p.\n", addr);
+    *page_addr = addr;
+    close(fd);
+}
+
+/***********************************************************************
+ *                         unmap_pageaddr()                            *
+ ***********************************************************************
+ *   Free the mapped page.	                                           *
+ **********************************************************************/
+
+void unmap_pageaddr(void *page_addr) {
+    if (munmap(page_addr, PAGE_SIZE) == -1) FATAL;
+}
+
+/***********************************************************************
+ *                             read_32()                               *
+ ***********************************************************************
+ *   Read 32-bit date from mapped address.                             *
+ **********************************************************************/
+
+void read_32(off_t src, unsigned int *dest) {
+    unsigned read_result;
+    void *page_addr, *virt_addr;
+
+    phyaddr_mapto_pageaddr(src, &page_addr);
+
+    virt_addr = PAGEADDR2VIRTADDR(src, page_addr);
+
+    *dest = *((unsigned int *)virt_addr);
+
+    unmap_pageaddr(page_addr);
+}
+
+/***********************************************************************
+ *                             write_32()                              *
+ ***********************************************************************
+ *   Write 32-bit date of mapped address. 	                           *
+ **********************************************************************/
+
+void write_32(off_t src, unsigned int *dest) {
+    unsigned read_result;
+    void *page_addr, *virt_addr;
+
+    phyaddr_mapto_pageaddr(src, page_addr);
+
+    virt_addr = PAGEADDR2VIRTADDR(src, page_addr);
+
+    *dest = *((unsigned int *)virt_addr);
+
+    unmap_pageaddr(page_addr);
+}
+
+int main() {
+    int a;
+    read_32(0x1, &a);
+    printf("a:%x\n", a);
+    return 0;
 }
