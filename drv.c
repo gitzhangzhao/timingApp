@@ -41,11 +41,14 @@
 
 #define MAP_SIZE 4096UL
 #define MAP_MASK (MAP_SIZE - 1)
+#define BASE_ADDR
+#define MAP_ADDR(x) { x + BASE_ADDR }
 
 /**********************************************************************
  *                        Hardware Definitions                        *
  **********************************************************************/
 /*         Register         Address Offset  No.    Description*/
+
 #define    Control                0x00    /*00*/
 #define    Eventramaddr           0x04    /*01*/
 #define    Eventramdata           0x08    /*02*/
@@ -92,52 +95,78 @@
 #define    FP6Map                 0x98    /*38     Front panel output mapping register */
 #define    uSecDivider            0x9c    /*39     Resvd11*/
 #define    ExtEventCode           0xa0    /*40*/
-#define    ClockControl           0xa4
-#define    SecondsSR              0xa8
-#define    TSSec                  0xac
-#define    Resvd12                0xb0
-#define    EvFIFOSec              0xb4
-#define    EvFIFOEvCnt            0xb8
-#define    OutputPol              0xbc
-#define    ExtDelay               0xc0/* extended/32-bit delay register*/
-#define    ExtWidth               0xc4/* extended/32-bit width register*/
-#define    Presc0                 0xc8/* 0x074, Front panel clock #0 presaler */
-#define    Presc1	              0xcc/* 0x076, Front panel clock #1 presaler */
-#define    Presc2                 0xd0/* 0x078, Front panel clock #2 presaler */
+#define    ClockControl           0xa4    /*41*/
+#define    TSSec                  0xac    /*43*/
+#define    SecondsSR              0xa8    /*42*/
+#define    Resvd12                0xb0    /*44*/
+#define    EvFIFOSec              0xb4    /*45*/
+#define    EvFIFOEvCnt            0xb8    /*46*/
+#define    OutputPol              0xbc    /*47*/
+#define    ExtDelay               0xc0    /*48     extended/32-bit delay register*/
+#define    ExtWidth               0xc4    /*49     extended/32-bit width register*/
+#define    Presc0                 0xc8    /*50     Front panel clock #0 presaler */
+#define    Presc1	              0xcc    /*51     Front panel clock #1 presaler */
+#define    Presc2                 0xd0    /*52     Front panel clock #2 presaler */
 /*define   Resvd13                0x7a*/
-#define    DataBufCtrl            0xd4/* 0x7a*/ /*leige */
-#define    RFpattern              0xd8/* 0x7c*/ /*leige set RFpattern */
-#define    FracDiv                0xdc/* 0x80 leige */
-  /* These registers are only of special interest and
-     left outside EPICS support for the time being. TK, 25-JUL-05. */
-#define    RfDelay                0x00
-#define    RxDelay                0x00
-#define    Resvd14                0x00/* 0x8c leige */
-#define    FBRFFrac               0x00/* 0x90 leige */
-#define    FbRxFrac               0x00
-#define    RFDelyInit             0x00
-#define    RxDelyInit             0x00/* 09C */
-#define    CML4Pat00              0x00/* 0A0 */
-#define    CML4Pat01              0x00/* 0A4 */
-#define    CML4Pat10              0x00/* 0A8 */
-#define    CML4Pat11              0x00/* 0AC */
-#define    CML4Ena                0x00/* 0B0 */
-#define    CML4EnaResv_1          0x00/* 0B4 */
-#define    CML4EnaResv_2          0x00/* 0B8 */
-#define    CML4EnaResv_3          0x00/* 0BC */
-#define    CML5Pat00              0x00/* 0C0 */
-#define    CML5Pat01              0x00/* 0C4 */
-#define    CML5Pat10              0x00/* 0C8 */
-#define    CML5Pat11              0x00/* 0CC */
-#define    CML5Ena                0x00/* 0D0 */
-#define    CML5EnaResv_1          0x00/* 0B4 */
-#define    CML5EnaResv_2          0x00/* 0B8 */
-#define    CML5EnaResv_3          0x00/* 0BC */
-#define    CML6Pat00              0x00/* 0E0 */
-#define    CML6Pat01              0x00/* 0E4 */
-#define    CML6Pat10              0x00/* 0E8 */
-#define    CML6Pat11              0x00/* 0EC */
-#define    CML6Ena                0x00/* 0F0 */
-#define    CML6EnaResv_1          0x00/* 0B4 */
-#define    CML6EnaResv_2          0x00/* 0B8 */
-#define    CML6EnaResv_3          0x00/* 0BC */
+#define    DataBufCtrl            0xd4    /*53     leige */
+#define    RFpattern              0xd8    /*54     leige set RFpattern */
+#define    FracDiv                0xdc    /*55     leige */
+
+/**********************************************************************
+* These registers are only of special interest and left outside EPICS *
+* support for the time being. TK, 25-JUL-05.                          *
+**********************************************************************/
+
+/* #define    RfDelay                0xe0 */
+/* #define    RxDelay                0xe4 */
+/* #define    Resvd14                0x00/1* 0x8c leige *1/ */
+/* #define    FBRFFrac               0x00/1* 0x90 leige *1/ */
+/* #define    FbRxFrac               0x00 */
+/* #define    RFDelyInit             0x00 */
+/* #define    RxDelyInit             0x00/1* 09C *1/ */
+/* #define    CML4Pat00              0x00/1* 0A0 *1/ */
+/* #define    CML4Pat01              0x00/1* 0A4 *1/ */
+/* #define    CML4Pat10              0x00/1* 0A8 *1/ */
+/* #define    CML4Pat11              0x00/1* 0AC *1/ */
+/* #define    CML4Ena                0x00/1* 0B0 *1/ */
+/* #define    CML4EnaResv_1          0x00/1* 0B4 *1/ */
+/* #define    CML4EnaResv_2          0x00/1* 0B8 *1/ */
+/* #define    CML4EnaResv_3          0x00/1* 0BC *1/ */
+/* #define    CML5Pat00              0x00/1* 0C0 *1/ */
+/* #define    CML5Pat01              0x00/1* 0C4 *1/ */
+/* #define    CML5Pat10              0x00/1* 0C8 *1/ */
+/* #define    CML5Pat11              0x00/1* 0CC *1/ */
+/* #define    CML5Ena                0x00/1* 0D0 *1/ */
+/* #define    CML5EnaResv_1          0x00/1* 0B4 *1/ */
+/* #define    CML5EnaResv_2          0x00/1* 0B8 *1/ */
+/* #define    CML5EnaResv_3          0x00/1* 0BC *1/ */
+/* #define    CML6Pat00              0x00/1* 0E0 *1/ */
+/* #define    CML6Pat01              0x00/1* 0E4 *1/ */
+/* #define    CML6Pat10              0x00/1* 0E8 *1/ */
+/* #define    CML6Pat11              0x00/1* 0EC *1/ */
+/* #define    CML6Ena                0x00/1* 0F0 *1/ */
+/* #define    CML6EnaResv_1          0x00/1* 0B4 *1/ */
+/* #define    CML6EnaResv_2          0x00/1* 0B8 *1/ */
+/* #define    CML6EnaResv_3          0x00/1* 0BC *1/ */
+
+/**********************************************************************
+*                             Functions                              *
+**********************************************************************/
+
+/*****************************
+ *  phyaddr_mapto_viraddr()  *
+ *****************************/
+
+off_t phyaddr_mapto_viraddr(off_t map_addr) {
+    int fd;
+    void *page_addr, *vir_addr;
+
+    if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
+    printf("/dev/mem opened.\n");
+
+    /* Map one page */
+    page_addr = mmap(0, MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
+                     map_addr & ~MAP_MASK);
+    if (page_addr == (void *)-1) FATAL;
+    printf("Memory mapped at address %p.\n", page_addr);
+}
