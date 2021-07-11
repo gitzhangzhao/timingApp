@@ -32,10 +32,16 @@
  *                          Macro Definitions                         *
  **********************************************************************/
 
+/* the default memory page size of the Linux Kernel is 4KB */
 #define PAGE_SIZE 4096UL
+
+/* page mask */
 #define PAGE_MASK (PAGE_SIZE - 1)
+
+/* base address of the register map. */
 #define BASE_ADDR
 
+/* print error message. */
 #define FATAL                                                              \
     do {                                                                   \
         fprintf(stderr, "Error at line %d, file %s (%d) [%s]\n", __LINE__, \
@@ -43,8 +49,10 @@
         exit(1);                                                           \
     } while (0)
 
+/* calulate register address according to base address and offset. */
 #define MAP_ADDR(x) (x + BASE_ADDR)
 
+/* calulate virtual address according to page' first address. */
 #define PAGEADDR2VIRTADDR(map_addr, page_addr) \
     page_addr + ((map_addr)&PAGE_MASK)
 
@@ -168,10 +176,11 @@ void phyaddr_mapto_pageaddr(off_t map_addr, void **page_addr) {
     int fd;
     void *addr;
 
+    /* open an image of the main memory */
     if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
     printf("/dev/mem opened.\n");
 
-    /* Map one page */
+    /* map one page */
     addr = mmap(0, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
                 map_addr & ~PAGE_MASK);
     if (addr == (void *)-1) FATAL;
@@ -189,6 +198,7 @@ void phyaddr_mapto_pageaddr(off_t map_addr, void **page_addr) {
 
 void unmap_pageaddr(void *page_addr) {
     if (munmap(page_addr, PAGE_SIZE) == -1) FATAL;
+    printf("The address has been freed.\n");
 }
 
 /***********************************************************************
@@ -205,6 +215,7 @@ void read_32(off_t src, unsigned int *dest) {
 
     virt_addr = PAGEADDR2VIRTADDR(src, page_addr);
 
+    /* read 4 bytes from the virtual address and put them in *dest. */
     *dest = *((unsigned int *)virt_addr);
 
     unmap_pageaddr(page_addr);
@@ -216,22 +227,16 @@ void read_32(off_t src, unsigned int *dest) {
  *   Write 32-bit date of mapped address. 	                           *
  **********************************************************************/
 
-void write_32(off_t src, unsigned int *dest) {
+void write_32(unsigned int src, off_t dest) {
     unsigned read_result;
     void *page_addr, *virt_addr;
 
-    phyaddr_mapto_pageaddr(src, page_addr);
+    phyaddr_mapto_pageaddr(dest, &page_addr);
 
-    virt_addr = PAGEADDR2VIRTADDR(src, page_addr);
+    virt_addr = PAGEADDR2VIRTADDR(dest, page_addr);
 
-    *dest = *((unsigned int *)virt_addr);
+    /* write 4 bytes of src to the virtual address. */
+    *((unsigned int *)virt_addr) = src;
 
     unmap_pageaddr(page_addr);
-}
-
-int main() {
-    int a;
-    read_32(0x1, &a);
-    printf("a:%x\n", a);
-    return 0;
 }
