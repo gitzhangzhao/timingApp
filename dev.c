@@ -58,6 +58,7 @@
 #define ER_IRQ_TAXI 0x0001
 #define ER_IRQ_DVME 0x0010
 #define ER_OT0_POL 0x0800
+
 /* Fractional synthesizer word setting. From HW doc. */
 #define FR_SYNTH_WORD 0x0c928166
 
@@ -74,7 +75,6 @@
  **********************************************************************/
 
 static long ErInitDev(int pass) {
-
     static int oneshotflag = 1;
 
     if (oneshotflag) {
@@ -97,8 +97,7 @@ static long ErInitDev(int pass) {
  *   Reset, clear and disable everything on the board.                *
  **********************************************************************/
 
-static int ErResetAll()
-{
+static int ErResetAll() {
     write_32(0x201d, Control);
     write_32(0x208d, Control);
     write_32(0, OutputPulseEnables);
@@ -106,15 +105,16 @@ static int ErResetAll()
     write_32(0, DelayPulseEnables);
     write_32(0, DelayPulseSelect);
     write_32(0, IrqEnables);
-    write_32((get_32(Control)&CONTROL_REG_OR_STRIP)|0x8000, Control);
+    write_32((get_32(Control) & CONTROL_REG_OR_STRIP) | 0x8000, Control);
+
     return 0;
 }
 
 /**********************************************************************
-*                          ErRegisterIrq()                           *
-**********************************************************************
-*   Set up the IRQs for the receiver.                                *
-**********************************************************************/
+ *                          ErRegisterIrq()                           *
+ **********************************************************************
+ *   Set up the IRQs for the receiver.                                *
+ **********************************************************************/
 
 static ErRegisterIrq() {}
 
@@ -124,17 +124,30 @@ static ErRegisterIrq() {}
  *   Enable or disable the IRQs from the EVR.                         *
  **********************************************************************/
 
-static unsigned int ErEnableIrq(unsigned int mask){
-    if (mask == ER_IRQ_OFF)
-    {
+static unsigned int ErEnableIrq(unsigned int mask) {
+    if (mask == ER_IRQ_OFF) {
         write_32(0, IrqEnables);
-        write_32((get_32(Control)&CONTROL_REG_OR_STRIP) & ~0x4000, Control);
+        write_32((get_32(Control) & CONTROL_REG_OR_STRIP) & ~0x4000, Control);
+
+    } else if (mask == ER_IRQ_TELL) {
+        if (get_32(Control) & 0x4000) return (get_32(IrqEnables & ER_IRQ_ALL));
+
+    } else {
+        write_32(mask, IrqEnables);
+        write_32((get_32(Control) & CONTROL_REG_OR_STRIP) | 0x4000, Control);
     }
-    else if (mask == ER_IRQ_TELL)
-    {
-        if (get_32(Control) & 0x4000){
-            return(get_32(IrqEnables & ER_IRQ_ALL));
-        }
-    }
+
+    return 0;
+}
+
+/**********************************************************************
+*                           init_record()                            *
+**********************************************************************
+*                Init routine for the ER record type.                *
+**********************************************************************/
+
+static long init_record(struct erRecord *pRec)
+{
+
 }
 
