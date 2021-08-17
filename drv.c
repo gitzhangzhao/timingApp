@@ -108,7 +108,6 @@ void unmap_pageaddr(void *page_addr) {
  **********************************************************************/
 
 void read_32(off_t src, unsigned int *dest) {
-    unsigned read_result;
     void *page_addr, *virt_addr;
 
     phyaddr_mapto_pageaddr(src, &page_addr);
@@ -123,23 +122,21 @@ void read_32(off_t src, unsigned int *dest) {
 }
 
 /***********************************************************************
- *                             get_32()                              *
+ *                             get_32()                                *
  ***********************************************************************
- *   Get 32-bit date of mapped address and return it. 	                           *
+ *   Get 32-bit date of mapped address and return it. 	               *
  **********************************************************************/
 
-void write_32(unsigned int src, off_t dest) {
-    unsigned read_result;
+unsigned int get_32(off_t src) {
     void *page_addr, *virt_addr;
 
-    phyaddr_mapto_pageaddr(dest, &page_addr);
+    phyaddr_mapto_pageaddr(src, &page_addr);
 
-    virt_addr = PAGEADDR2VIRTADDR(dest, page_addr);
+    virt_addr = PAGEADDR2VIRTADDR(src, page_addr);
 
-    /* write 4 bytes of src to the virtual address. */
-    *((unsigned int *)virt_addr) = src;
+    /* read 4 bytes from the virtual address and return it. */
+    return (*((unsigned int *)virt_addr));
 
-    printf("write 32-bits data %08x at %p\n.", *((unsigned int *)virt_addr), virt_addr);
     unmap_pageaddr(page_addr);
 }
 
@@ -150,7 +147,6 @@ void write_32(unsigned int src, off_t dest) {
  **********************************************************************/
 
 void write_32(unsigned int src, off_t dest) {
-    unsigned read_result;
     void *page_addr, *virt_addr;
 
     phyaddr_mapto_pageaddr(dest, &page_addr);

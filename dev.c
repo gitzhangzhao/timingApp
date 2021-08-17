@@ -46,7 +46,23 @@
 /**********************************************************************
  *                          Macro Definitions                         *
  **********************************************************************/
+#define CONTROL_REG_OR_STRIP (~0x3c9f)
+#define NUM_EVENTS 257
 
+#define ER_IRQ_ALL 0x001f
+#define ER_IRQ_OFF 0x0000
+#define ER_IRQ_TELL 0xffff
+#define ER_IRQ_EVENT 0x0008
+#define ER_IRQ_HEART 0x0004
+#define ER_IRQ_FIFO 0x0002
+#define ER_IRQ_TAXI 0x0001
+#define ER_IRQ_DVME 0x0010
+#define ER_OT0_POL 0x0800
+/* Fractional synthesizer word setting. From HW doc. */
+#define FR_SYNTH_WORD 0x0c928166
+
+/* leige add FR_SYNTH_WORD definition for BEPCII */
+#define BEPCII_FRAC_4 0x00FE816D
 /**********************************************************************
  *                             Functions                              *
  **********************************************************************/
@@ -89,7 +105,36 @@ static int ErResetAll()
     write_32(0, OutputLevelEnables);
     write_32(0, DelayPulseEnables);
     write_32(0, DelayPulseSelect);
-    write_32(0, IrqEnables);;
-    write_32()
-
+    write_32(0, IrqEnables);
+    write_32((get_32(Control)&CONTROL_REG_OR_STRIP)|0x8000, Control);
+    return 0;
 }
+
+/**********************************************************************
+*                          ErRegisterIrq()                           *
+**********************************************************************
+*   Set up the IRQs for the receiver.                                *
+**********************************************************************/
+
+static ErRegisterIrq() {}
+
+/**********************************************************************
+ *                           ErEnableIrq()                            *
+ **********************************************************************
+ *   Enable or disable the IRQs from the EVR.                         *
+ **********************************************************************/
+
+static unsigned int ErEnableIrq(unsigned int mask){
+    if (mask == ER_IRQ_OFF)
+    {
+        write_32(0, IrqEnables);
+        write_32((get_32(Control)&CONTROL_REG_OR_STRIP) & ~0x4000, Control);
+    }
+    else if (mask == ER_IRQ_TELL)
+    {
+        if (get_32(Control) & 0x4000){
+            return(get_32(IrqEnables & ER_IRQ_ALL));
+        }
+    }
+}
+
