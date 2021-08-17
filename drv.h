@@ -19,6 +19,7 @@
 #ifndef DRV_H
 #define DRV_H
 
+#include<fcntl.h>
 #include<stdio.h>
 
 /**********************************************************************
@@ -27,16 +28,16 @@
 /*         Register         Address Offset  No.    Description*/
 
 #define    Control                0x00    /*00*/
-#define    Eventramaddr           0x04    /*01*/
-#define    Eventramdata           0x08    /*02*/
-#define    Outputpulseenables     0x0c    /*03*/
-#define    Outputlevelenables     0x10    /*04*/
-#define    Triggereventenables    0x14    /*05*/
-#define    Eventcounterlo         0x18    /*06*/
-#define    Eventcounterhi         0x1c    /*07*/
-#define    Timestamplo            0x20    /*08*/
-#define    Timestamphi            0x24    /*09*/
-#define    Eventfifo              0x28    /*10     lsb = event #, msb  lsb of time stamp counter */
+#define    EventRamAddr           0x04    /*01*/
+#define    EventRamData           0x08    /*02*/
+#define    OutputPulseEnables     0x0c    /*03*/
+#define    OutputLevelEnables     0x10    /*04*/
+#define    TriggerEventEnables    0x14    /*05*/
+#define    EventCounterLo         0x18    /*06*/
+#define    EventCounterHi         0x1c    /*07*/
+#define    TimeStampLo            0x20    /*08*/
+#define    TimeStampHi            0x24    /*09*/
+#define    EventFifo              0x28    /*10     lsb = event #, msb  lsb of time stamp counter */
 #define    EventTimeHi            0x2c    /*11     bits 23-8 of the time stamp counter */
 #define    DelayPulseEnables      0x30    /*12*/
 #define    DelayPulseSelect       0x34    /*13     OTP pulses have delays and widths. See HW technical reference */
