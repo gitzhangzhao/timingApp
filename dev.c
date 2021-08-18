@@ -208,6 +208,7 @@ static long proc(struct erRecord *pRec) {
     pRec->fpgv = ErGetFpgaVersion();
     /* pRec->rxvc = RxvioCount; */
 
+    /* OTL (level output) enables. */
     ErSetOtl(0, pRec->otl0);
     ErSetOtl(1, pRec->otl1);
     ErSetOtl(2, pRec->otl2);
@@ -215,6 +216,24 @@ static long proc(struct erRecord *pRec) {
     ErSetOtl(4, pRec->otl4);
     ErSetOtl(5, pRec->otl5);
     ErSetOtl(6, pRec->otl6);
+
+    /* delay generator channel parameters */
+    ErSetDg(0, pRec->dg0e, pRec->dg0d, pRec->dg0w, pRec->dg0c, pRec->dg0p);
+    ErSetDg(1, pRec->dg1e, pRec->dg1d, pRec->dg1w, pRec->dg1c, pRec->dg1p);
+    ErSetDg(2, pRec->dg2e, pRec->dg2d, pRec->dg2w, pRec->dg2c, pRec->dg2p);
+    ErSetDg(3, pRec->dg3e, pRec->dg3d, pRec->dg3w, pRec->dg3c, pRec->dg3p);
+
+    ErSetDVME(pLink->pEr, pRec->dvme, pRec->dvmd, pRec->dvmc);
+
+    /* front panel output configuration */
+
+    ErSetFPMap(0,pRec->fps0);
+    ErSetFPMap(1,pRec->fps1);
+    ErSetFPMap(2,pRec->fps2);
+    ErSetFPMap(3,pRec->fps3);
+    ErSetFPMap(4,pRec->fps4);
+    ErSetFPMap(5,pRec->fps5);
+    ErSetFPMap(6,pRec->fps6);
 
 }
 
@@ -366,7 +385,7 @@ static long ErSetTickPre(int scaler_val) {
 }
 
 /**********************************************************************
- *                            ErSetFPMap()                            *
+ *                              ErSetFPMap()                            *
  **********************************************************************
  *   Set the front panel output map.                                  *
  **********************************************************************/
