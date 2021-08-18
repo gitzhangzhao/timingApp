@@ -33,8 +33,8 @@
  *  epics device support header files  *
  ***************************************/
 
-#include <dbScan.h>
-#include <devSup.h>
+/* #include <dbScan.h> */
+/* #include <devSup.h> */
 
 /************************
  *  local header files  *
@@ -141,13 +141,188 @@ static unsigned int ErEnableIrq(unsigned int mask) {
 }
 
 /**********************************************************************
-*                           init_record()                            *
+ *                           init_record()                            *
+ **********************************************************************
+ *   Init routine for the ER record type.                             *
+ **********************************************************************/
+
+static long init_record(struct erRecord *pRec) {
+    proc();
+
+    return 0;
+}
+
+/**********************************************************************
+ *                               proc()                               *
+ **********************************************************************
+ *   Process routine for the ER record type.                          *
+ **********************************************************************/
+
+static long proc(struct erRecord *pRec) {
+    if (pRec->tpro > 10) {
+        printf("dev::proc(%s) entered\n", pRec->name);
+    }
+
+    if (pRec->enab != ErMasterEnableGet()) {
+        ErMasterEnableSet(pRec->enab);
+    }
+}
+
+/**********************************************************************
+ *                        ErMasterEnableGet()                         *
+ **********************************************************************
+ *   Inquire as to if EVR is enabled or not.                          *
+ **********************************************************************/
+
+static long ErMasterEnableGet() { return ((get_32(Control) & 0x8000) != 0); }
+
+/**********************************************************************
+ *                        ErMasterEnableSet()                         *
+ **********************************************************************
+ *   Enable/disable EVR.                                              *
+ **********************************************************************/
+
+static long ErMasterEnableSet(int enable) {
+    if (enable != 0) {
+        write_32((get_32(Control) & CONTROL_REG_OR_STRIP) | 0x8000, Control);
+    } else {
+        write_32((get_32(Control) & CONTROL_REG_OR_STRIP) & ~0x8000, Control);
+    }
+
+    return 0;
+}
+
+/**********************************************************************
+ *                              ErSetTrg                              *
+ **********************************************************************
+ *   Set/clear an enable bit in the trigger mask.                     *
+ **********************************************************************/
+
+static long ErSetTrg(int channel, int enable) {
+    unsigned short mask;
+
+    mask = 1;
+    mask <<= channel;
+
+    if (enable != 0) {
+        write_32((get_32(TriggerEventEnables) | mask), TriggerEventEnables);
+    } else {
+        write_32((get_32(TriggerEventEnables) & ~mask), TriggerEventEnables);
+    }
+
+    return 0;
+}
+
+*ErSetOtp() *
+    /**********************************************************************
+     **********************************************************************
+     *   Set/clear an enable bit in the one-shot mask.                    *
+     **********************************************************************/
+
+    static long ErSetOtp(int channel, int enable, unsigned short width,
+                         unsigned short pol, unsigned int delay) {
+    unsigned short mask;
+    unsigned int pol_mask;
+
+    mask = 1;
+    mask <<= channel;
+
+    /* set the pluse width */
+    write_32((channel | 0x10), DelayPulseSelect);
+    write_32(width, PulseWidth);
+    write_32(delay, ExtDelay);
+
+    pol_mask = (ER_OT0_POL << channel);
+
+    if (pol == 0) {
+        write_32((get_32(OutputPol) & ~pol_mask), OutputPol);
+    } else {
+        write_32((get_32(OutputPol) | pol_mask), OutputPol);
+    }
+
+    if (enable != 0) {
+        write_32((get_32(OutputPulseEnables) | mask), OutputPulseEnables);
+        write_32((get_32(OutputPulseEnables) & ~mask), OutputPulseEnables);
+    }
+
+    return 0;
+}
+
+/**********************************************************************
+ *                             ErSetOtl()                             *
+ **********************************************************************
+ *   Set/clear an enable bit in the level-trigger mask.               *
+ **********************************************************************/
+
+static long ErSetOtl(int channel, int enable) {
+    unsigned short mask;
+
+    mask = 1;
+    mask <<= channel;
+
+    if (enable != 0) {
+        write_32((get_32(OutputLevelEnables) | mask), OutputLevelEnables);
+        write_32((get_32(OutputLevelEnables) & ~mask), OutputLevelEnables);
+    }
+
+    return 0;
+}
+
+/**********************************************************************
+*                             ErSetOtb()                             *
 **********************************************************************
-*                Init routine for the ER record type.                *
+*   Enable/Disable distributed bus channels on the output.           *
 **********************************************************************/
 
-static long init_record(struct erRecord *pRec)
-{
+static long ErSetOtb(int channel, int enable){
+    unsigned short mask;
 
+    mask = 1;
+    mask <<= channel;
+
+    if (enable != 0) {
+        write_32((get_32(DBusEnables) | mask), DBusEnables);
+        write_32((get_32(DBusEnables) & ~mask), DBusEnables);
+    }
+
+    return 0;
+}
+
+/**********************************************************************
+ *                         ErGetFpgaVersion()                         *
+ **********************************************************************
+ *   Get FPGA version                                                 *
+ **********************************************************************/
+
+static long ErGetFpgaVersion() { return (get_32(FPGAVersion) & 0x0fff); }
+
+/**********************************************************************
+ *                           ErSetTickPre()                           *
+ **********************************************************************
+ *   Set the tick counter prescaler (0=count '124' events, other      *
+ *   value= value to divide the internal clock with.)                 *
+ **********************************************************************/
+
+static long ErSetTickPre(int scaler_val) {
+    if (!(scaler_val >= 0 || scaler_val < 65535)) {
+        printf("ErSetTickPre: scaler_val: %d is out of range.");
+
+        return -1;
+
+    } else
+        write_32(scaler_val, EventCounterClock);
+
+    return 0;
+}
+
+/**********************************************************************
+*                            ErSetFPMap()                            *
+**********************************************************************
+*   Set the front panel output map.                                  *
+**********************************************************************/
+
+static long ErSetFPMap(int channel, int map){
+    if(channel<0 || channel >6 )
+        return ERROR;
 }
 
