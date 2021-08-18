@@ -24,7 +24,9 @@
  *  c header files  *
  ********************/
 
+#include <asm-generic/errno.h>
 #include <errno.h>
+#include <features.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +42,7 @@
  *  local header files  *
  ************************/
 
+#include "dev.h"
 #include "drv.h"
 #include "erconfigure.h"
 
@@ -269,12 +272,12 @@ static long ErSetOtl(int channel, int enable) {
 }
 
 /**********************************************************************
-*                             ErSetOtb()                             *
-**********************************************************************
-*   Enable/Disable distributed bus channels on the output.           *
-**********************************************************************/
+ *                             ErSetOtb()                             *
+ **********************************************************************
+ *   Enable/Disable distributed bus channels on the output.           *
+ **********************************************************************/
 
-static long ErSetOtb(int channel, int enable){
+static long ErSetOtb(int channel, int enable) {
     unsigned short mask;
 
     mask = 1;
@@ -316,13 +319,75 @@ static long ErSetTickPre(int scaler_val) {
 }
 
 /**********************************************************************
-*                            ErSetFPMap()                            *
-**********************************************************************
-*   Set the front panel output map.                                  *
-**********************************************************************/
+ *                            ErSetFPMap()                            *
+ **********************************************************************
+ *   Set the front panel output map.                                  *
+ **********************************************************************/
 
-static long ErSetFPMap(int channel, int map){
-    if(channel<0 || channel >6 )
-        return ERROR;
+static long ErSetFPMap(int channel, int map) {
+    if (channel < 0 || channel > 6) return -1;
+
+    if (map < 0 || map > EVR_FPMAP_MAX) return -1;
+
+    switch (channel) {
+        case 0:
+            write_32(map, FP0Map);
+            break;
+        case 1:
+            write_32(map, FP1Map);
+            break;
+        case 2:
+            write_32(map, FP2Map);
+            break;
+        case 3:
+            write_32(map, FP3Map);
+            break;
+        case 4:
+            write_32(map, FP4Map);
+            break;
+        case 5:
+            write_32(map, FP5Map);
+            break;
+        case 6:
+            write_32(map, FP6Map);
+            break;
+    }
+
+    return 0;
 }
 
+/**********************************************************************
+ *                             ErSetDg()                              *
+ **********************************************************************
+ *   Set/clear an enable bit in the programmable pulse delay mask.    *
+ *   If enabling a channel, the delay and width are also set.         *
+ **********************************************************************/
+
+static long ErSetDg(int channel, int enable, unsigned int delay,
+                    unsigned int width, unsigned short prescaler,
+                    unsigned short pol) {
+    unsigned short mask, pol_mask;
+
+    mask = 1;
+    mask <<= channel;
+    pol_mask = 1;
+    pol_mask <<= channel + 4;
+
+    if (enable != 0) {
+        write_32(channel, DelayPulseSelect);
+        write_32(delay, ExtDelay);
+        write_32(width, ExtWidth);
+        write_32(prescaler, DelayPrescaler);
+        write_32((get_32(DelayPulseEnables) | mask), DelayPulseEnables);
+
+        if (pol != 0)
+            write_32((get_32(DelayPulseEnables) | pol_mask), DelayPulseEnables);
+        else
+            write_32((get_32(DelayPulseEnables) & ~pol_mask),
+                     DelayPulseEnables);
+
+    } else
+        write_32((get_32(DelayPulseEnables) & ~mask), DelayPulseEnables);
+
+    return 0;
+}

@@ -20,7 +20,6 @@
 #define DRV_H
 
 #include<fcntl.h>
-#include<stdio.h>
 
 /**********************************************************************
  *                        Hardware Definitions                        *
@@ -52,8 +51,8 @@
 
 #define    DBusEnables            0x48    /*18     Distributed bus enable register */
 #define    DBusData               0x4c    /*19     Distributed bus data register (read only) */
-#define    DelayPrescaler         0x50    /*20     Programmable delay pulse clock prescaler */
 #define    Resvd1                 0x58    /*22*/
+#define    DelayPrescaler         0x50    /*20     Programmable delay pulse clock prescaler */
 #define    FPGAVersion            0x5c    /*23     FPGA Firmware version number */
 #define    EventCounterClock      0x54    /*21     Event counter clock prescaler */
 #define    Resvd3                 0x60    /*24*/
