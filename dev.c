@@ -67,6 +67,8 @@
 
 /* leige add FR_SYNTH_WORD definition for BEPCII */
 #define BEPCII_FRAC_4 0x00FE816D
+
+
 /**********************************************************************
  *                             Functions                              *
  **********************************************************************/
@@ -169,6 +171,51 @@ static long proc(struct erRecord *pRec) {
     if (pRec->enab != ErMasterEnableGet()) {
         ErMasterEnableSet(pRec->enab);
     }
+    ErSetTrg(0, pRec->trg0);
+    ErSetTrg(1, pRec->trg1);
+    ErSetTrg(2, pRec->trg2);
+    ErSetTrg(3, pRec->trg3);
+    ErSetTrg(4, pRec->trg4);
+    ErSetTrg(5, pRec->trg5);
+    ErSetTrg(6, pRec->trg6);
+     
+    /* Set OTP output parameters (enable, width, polarity) for each channel */
+    ErSetOtp(0, pRec->otp0, pRec->ot0w, pRec->ot0p, pRec->ot0d);
+    ErSetOtp(1, pRec->otp1, pRec->ot1w, pRec->ot1p, pRec->ot1d);
+    ErSetOtp(2, pRec->otp2, pRec->ot2w, pRec->ot2p, pRec->ot2d);
+    ErSetOtp(3, pRec->otp3, pRec->ot3w, pRec->ot3p, pRec->ot3d);
+    ErSetOtp(4, pRec->otp4, pRec->ot4w, pRec->ot4p, pRec->ot4d);
+    ErSetOtp(5, pRec->otp5, pRec->ot5w, pRec->ot5p, pRec->ot5d);
+    ErSetOtp(6, pRec->otp6, pRec->ot6w, pRec->ot6p, pRec->ot6d);
+    ErSetOtp(7, pRec->otp7, pRec->ot7w, pRec->ot7p, pRec->ot7d);
+    ErSetOtp(8, pRec->otp8, pRec->ot8w, pRec->ot8p, pRec->ot8d);
+    ErSetOtp(9, pRec->otp9, pRec->ot9w, pRec->ot9p, pRec->ot9d);
+    ErSetOtp(10, pRec->otp10, pRec->ot10w, pRec->ot10p, pRec->ot10d);
+    ErSetOtp(11, pRec->otp11, pRec->ot11w, pRec->ot11p, pRec->ot11d);
+    ErSetOtp(12, pRec->otp12, pRec->ot12w, pRec->ot12p, pRec->ot12d);
+    ErSetOtp(13, pRec->otp13, pRec->ot13w, pRec->ot13p, pRec->ot13d);
+
+    /* OTnB distributed bus enables */
+    ErSetOtb(0, pRec->ot0b);
+    ErSetOtb(1, pRec->ot1b);
+    ErSetOtb(2, pRec->ot2b);
+    ErSetOtb(3, pRec->ot3b);
+    ErSetOtb(4, pRec->ot4b);
+    ErSetOtb(5, pRec->ot5b);
+    ErSetOtb(6, pRec->ot6b);
+    ErSetOtb(7, pRec->ot7b);
+
+    pRec->fpgv = ErGetFpgaVersion();
+    /* pRec->rxvc = RxvioCount; */
+
+    ErSetOtl(0, pRec->otl0);
+    ErSetOtl(1, pRec->otl1);
+    ErSetOtl(2, pRec->otl2);
+    ErSetOtl(3, pRec->otl3);
+    ErSetOtl(4, pRec->otl4);
+    ErSetOtl(5, pRec->otl5);
+    ErSetOtl(6, pRec->otl6);
+
 }
 
 /**********************************************************************
@@ -196,7 +243,7 @@ static long ErMasterEnableSet(int enable) {
 }
 
 /**********************************************************************
- *                              ErSetTrg                              *
+ *                            ErSetTrg()                              *
  **********************************************************************
  *   Set/clear an enable bit in the trigger mask.                     *
  **********************************************************************/
@@ -216,14 +263,14 @@ static long ErSetTrg(int channel, int enable) {
     return 0;
 }
 
-*ErSetOtp() *
-    /**********************************************************************
-     **********************************************************************
-     *   Set/clear an enable bit in the one-shot mask.                    *
-     **********************************************************************/
+/**********************************************************************
+ *                             ErSetOtp()                             *
+ **********************************************************************
+ *   Set/clear an enable bit in the one-shot mask.                    *
+ **********************************************************************/
 
-    static long ErSetOtp(int channel, int enable, unsigned short width,
-                         unsigned short pol, unsigned int delay) {
+static long ErSetOtp(int channel, int enable, unsigned short width,
+                     unsigned short pol, unsigned int delay) {
     unsigned short mask;
     unsigned int pol_mask;
 
