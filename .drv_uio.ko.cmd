@@ -1,0 +1,1 @@
+cmd_/home/zhangzhao/Lab/timingApp/drv_uio.ko := ld -r -m elf_x86_64 --build-id=sha1  -T arch/x86/module.lds -o /home/zhangzhao/Lab/timingApp/drv_uio.ko /home/zhangzhao/Lab/timingApp/drv_uio.o /home/zhangzhao/Lab/timingApp/drv_uio.mod.o;  true

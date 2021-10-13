@@ -10,11 +10,10 @@ int main() {
     /* while (1) { */
         /* write_32(0x00, 0x0300B058); */
         read_32(0x0, &a);
-        printf("gpio PC12:0x%08x\n", a);
-        write_32(get_32(0x0)+1, 0x0);
+        printf("a:0x%08x\n", a);
 
-        read_32(0x0, &a);
-        printf("gpio PC12:0x%08x\n", a);
+        /* read_32(0x0, &a); */
+        /* printf("gpio PC12:0x%08x\n", a); */
         /* sleep(1); */
 
         /* write_32(0x00002000, 0x0300B058); */

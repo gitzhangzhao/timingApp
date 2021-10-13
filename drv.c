@@ -77,7 +77,7 @@ void phyaddr_mapto_pageaddr(off_t map_addr, void **page_addr) {
     map_addr = MAP_ADDR(map_addr);
 
     /* open an image of the main memory */
-    if ((fd = open("/dev/mem", O_RDWR | O_SYNC)) == -1) FATAL;
+    if ((fd = open("/dev/uio0", O_RDWR | O_SYNC)) == -1) FATAL;
     printf("/dev/mem opened.\n");
 
     /* map one page */
